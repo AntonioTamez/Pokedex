@@ -7,16 +7,20 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.pokedex.data.PokemonDetail
 import com.example.pokedex.data.PokemonEntry
@@ -32,6 +36,15 @@ fun PokemonListScreen(viewModel: PokemonViewModel) {
                     containerColor = Color(0xFFE3350D)
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { viewModel.startQuiz() },
+                containerColor = Color(0xFFE3350D),
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.PlayArrow, contentDescription = "Quiz")
+            }
         },
         containerColor = Color(0xFFF2F2F2)
     ) { padding ->
@@ -55,6 +68,108 @@ fun PokemonListScreen(viewModel: PokemonViewModel) {
 
         viewModel.selectedPokemon?.let { pokemon ->
             PokemonDetailDialog(pokemon, onDismiss = { viewModel.dismissDetail() })
+        }
+
+        if (viewModel.showQuiz) {
+            PokemonQuizDialog(viewModel)
+        }
+    }
+}
+
+@Composable
+fun PokemonQuizDialog(viewModel: PokemonViewModel) {
+    Dialog(
+        onDismissRequest = { viewModel.closeQuiz() },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color.White
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "¿Quién es este Pokémon?",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(250.dp)
+                        .background(Color(0xFFF2F2F2), RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = viewModel.quizPokemon?.imageUrl,
+                        contentDescription = "Quiz Pokemon",
+                        modifier = Modifier.size(200.dp),
+                        colorFilter = if (viewModel.isAnswerCorrect) null else ColorFilter.tint(Color.Black)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                viewModel.quizOptions.forEach { option ->
+                    Button(
+                        onClick = { viewModel.checkAnswer(option) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = when {
+                                viewModel.isAnswerCorrect && option == viewModel.quizPokemon?.name -> Color(0xFF4CAF50)
+                                else -> Color(0xFFE3350D)
+                            }
+                        ),
+                        enabled = !viewModel.isAnswerCorrect
+                    ) {
+                        Text(
+                            text = option.replaceFirstChar { it.uppercase() },
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                if (viewModel.isAnswerCorrect) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "¡Correcto!",
+                        color = Color(0xFF4CAF50),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row {
+                        Button(
+                            onClick = { viewModel.nextQuiz() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                        ) {
+                            Text("Siguiente")
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(
+                            onClick = { viewModel.closeQuiz() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                        ) {
+                            Text("Cerrar")
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TextButton(onClick = { viewModel.closeQuiz() }) {
+                        Text("Rendirse", color = Color.Gray)
+                    }
+                }
+            }
         }
     }
 }

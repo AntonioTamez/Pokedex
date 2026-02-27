@@ -31,6 +31,16 @@ class PokemonViewModel : ViewModel() {
     var isDetailLoading by mutableStateOf(false)
         private set
 
+    // Quiz State
+    var quizPokemon by mutableStateOf<PokemonEntry?>(null)
+        private set
+    var quizOptions by mutableStateOf<List<String>>(emptyList())
+        private set
+    var isAnswerCorrect by mutableStateOf(false)
+        private set
+    var showQuiz by mutableStateOf(false)
+        private set
+
     init {
         fetchPokemon()
     }
@@ -64,5 +74,36 @@ class PokemonViewModel : ViewModel() {
 
     fun dismissDetail() {
         selectedPokemon = null
+    }
+
+    fun startQuiz() {
+        if (pokemonList.isEmpty()) return
+        
+        isAnswerCorrect = false
+        val correctPokemon = pokemonList.random()
+        quizPokemon = correctPokemon
+        
+        val otherOptions = pokemonList
+            .filter { it.name != correctPokemon.name }
+            .shuffled()
+            .take(2)
+            .map { it.name }
+        
+        quizOptions = (otherOptions + correctPokemon.name).shuffled()
+        showQuiz = true
+    }
+
+    fun checkAnswer(answer: String) {
+        if (answer == quizPokemon?.name) {
+            isAnswerCorrect = true
+        }
+    }
+
+    fun nextQuiz() {
+        startQuiz()
+    }
+    
+    fun closeQuiz() {
+        showQuiz = false
     }
 }
