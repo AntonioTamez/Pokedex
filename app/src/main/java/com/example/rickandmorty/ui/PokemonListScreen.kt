@@ -1,5 +1,8 @@
 package com.example.pokedex.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,7 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +31,8 @@ import com.example.pokedex.data.PokemonEntry
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PokemonListScreen(viewModel: PokemonViewModel) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -38,12 +43,26 @@ fun PokemonListScreen(viewModel: PokemonViewModel) {
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.startQuiz() },
-                containerColor = Color(0xFFE3350D),
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = "Quiz")
+            Box {
+                FloatingActionButton(
+                    onClick = { showMenu = true },
+                    containerColor = Color(0xFFE3350D),
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Menú de Juegos")
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("🎮 Quizz: ¿Quién es?") },
+                        onClick = {
+                            showMenu = false
+                            viewModel.startQuiz()
+                        }
+                    )
+                }
             }
         },
         containerColor = Color(0xFFF2F2F2)
@@ -115,7 +134,23 @@ fun PokemonQuizDialog(viewModel: PokemonViewModel) {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Mensaje de error temporal
+                AnimatedVisibility(
+                    visible = viewModel.isAnswerIncorrect,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Text(
+                        text = "¡Incorrecto, intenta de nuevo!",
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 viewModel.quizOptions.forEach { option ->
                     Button(

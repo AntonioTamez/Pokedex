@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.pokedex.data.PokeApiService
 import com.example.pokedex.data.PokemonDetail
 import com.example.pokedex.data.PokemonEntry
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -37,6 +38,8 @@ class PokemonViewModel : ViewModel() {
     var quizOptions by mutableStateOf<List<String>>(emptyList())
         private set
     var isAnswerCorrect by mutableStateOf(false)
+        private set
+    var isAnswerIncorrect by mutableStateOf(false)
         private set
     var showQuiz by mutableStateOf(false)
         private set
@@ -80,6 +83,7 @@ class PokemonViewModel : ViewModel() {
         if (pokemonList.isEmpty()) return
         
         isAnswerCorrect = false
+        isAnswerIncorrect = false
         val correctPokemon = pokemonList.random()
         quizPokemon = correctPokemon
         
@@ -96,6 +100,13 @@ class PokemonViewModel : ViewModel() {
     fun checkAnswer(answer: String) {
         if (answer == quizPokemon?.name) {
             isAnswerCorrect = true
+            isAnswerIncorrect = false
+        } else {
+            isAnswerIncorrect = true
+            viewModelScope.launch {
+                delay(2000)
+                isAnswerIncorrect = false
+            }
         }
     }
 
